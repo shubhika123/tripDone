@@ -1,0 +1,10 @@
+name: Frontend Deploy
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Vercel auto-deploys from GitHub"

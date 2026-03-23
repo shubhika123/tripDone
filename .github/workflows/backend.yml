@@ -1,0 +1,10 @@
+name: Backend Deploy
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Railway auto-deploys from GitHub"
