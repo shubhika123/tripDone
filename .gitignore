@@ -16,3 +16,4 @@ backend/app/ml/model.pkl
 # System
 .DS_Store
 *.log
+backend/app/ml/model.pkl
