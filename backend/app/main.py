@@ -3,16 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from app.core.mock_data import (
-    MOCK_SEARCH_RESPONSE, MOCK_PREDICT_RESPONSE, MOCK_ALERTS_RESPONSE,
-    MOCK_TRIPS_RESPONSE, MOCK_GALLERY_UPLOAD_URL, MOCK_CHAT_RESPONSE,
-    MOCK_NOTIFICATIONS, MOCK_SAVED_TRIPS
+    MOCK_SEARCH_RESPONSE, MOCK_ALERTS_RESPONSE,
+    MOCK_TRIPS_RESPONSE, MOCK_GALLERY_UPLOAD_URL,
+    MOCK_CHAT_RESPONSE, MOCK_NOTIFICATIONS, MOCK_SAVED_TRIPS
 )
+from app.ml.predict import predict_price
 
-app = FastAPI(title="TripDone API", version="1.0.0")
+app = FastAPI(title="TripDone API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://tripdone.vercel.app"],
+    allow_origins=["http://localhost:3000","https://tripdone.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,7 +23,7 @@ class SearchRequest(BaseModel):
     from_city: str
     to_city: str
     date: str
-    modes: List[str] = ["flight", "train", "cab", "bus"]
+    modes: List[str] = ["flight","train","cab","bus"]
     adults: int = 1
 
 class AlertRequest(BaseModel):
@@ -54,15 +55,15 @@ class GalleryUploadRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"status": "TripDone API is running", "version": "1.0.0"}
+    return {"status": "TripDone API running"}
 
 @app.post("/api/search")
 async def search(req: SearchRequest):
     return MOCK_SEARCH_RESPONSE
 
 @app.get("/api/predict")
-async def predict(route: str, mode: str = "flight", date: str = ""):
-    return MOCK_PREDICT_RESPONSE
+async def predict(route: str = "LKO-BOM", mode: str = "flight", date: str = "2026-03-30", current_price: float = 4200):
+    return predict_price(route, date, current_price)
 
 @app.post("/api/alerts")
 async def create_alert(req: AlertRequest):
