@@ -92,3 +92,14 @@ async def chat(req: ChatRequest):
 @app.get("/api/notifications")
 async def get_notifications():
     return {"notifications": MOCK_NOTIFICATIONS}
+
+# Best time to travel endpoint
+from app.routers.best_time import router as best_time_router
+app.include_router(best_time_router)
+
+
+
+from app.routers.best_time import router as best_time_router
+
+app.include_router(best_time_router)
+
