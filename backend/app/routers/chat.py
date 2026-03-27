@@ -29,7 +29,7 @@ async def chat(req: ChatRequest):
         r = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization":f"Bearer {GROQ_KEY}","Content-Type":"application/json"},
-            json={"model":"llama3-8b-8192","max_tokens":200,"messages":messages},
+            json={"model":"llama-3.1-8b-instant","max_tokens":200,"messages":messages},
             timeout=15
         )
         reply = r.json()["choices"][0]["message"]["content"]
