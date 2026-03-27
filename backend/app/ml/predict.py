@@ -1,5 +1,6 @@
 import joblib
 import numpy as np
+import pandas as pd
 import os
 from datetime import datetime, date
 
@@ -15,8 +16,6 @@ def load_model():
         model = joblib.load(MODEL_PATH)
         scaler = joblib.load(SCALER_PATH)
         print("ML model loaded")
-    else:
-        print("No model.pkl found — using rule-based fallback")
 
 def predict_price(route: str, travel_date: str, current_price: float):
     try:
@@ -27,8 +26,9 @@ def predict_price(route: str, travel_date: str, current_price: float):
         avg_7day = current_price * 1.05
 
         if model:
-            X = scaler.transform([[days_to_dep, dow, is_weekend, avg_7day]])
-            predicted = float(model.predict(X)[0])
+            X = pd.DataFrame([[days_to_dep, dow, is_weekend, avg_7day]],
+                columns=["days_to_departure","day_of_week","is_weekend","avg_7day"])
+            predicted = float(model.predict(scaler.transform(X))[0])
         else:
             predicted = current_price * (1.1 if days_to_dep < 7 else 0.95)
 
@@ -50,7 +50,7 @@ def predict_price(route: str, travel_date: str, current_price: float):
         return {
             "verdict": verdict,
             "confidence": confidence,
-            "reason": f"Price {'expected to rise' if will_rise else 'may drop'} in {days_to_dep} days. {'Book now to save.' if not will_rise else 'Wait for a better deal.'}",
+            "reason": f"Price {'expected to rise' if will_rise else 'may drop'} in {days_to_dep} days. {'Book now.' if not will_rise else 'Wait for a better deal.'}",
             "current_price": round(current_price),
             "avg_14day": round(avg_7day),
             "predicted_peak": round(current_price * 1.18),
@@ -60,16 +60,6 @@ def predict_price(route: str, travel_date: str, current_price: float):
         }
     except Exception as e:
         print(f"Predict error: {e}")
-        return {
-            "verdict": "buy",
-            "confidence": 0.82,
-            "reason": "Current price is below average. Good time to book.",
-            "current_price": round(current_price),
-            "avg_14day": round(current_price * 1.08),
-            "predicted_peak": round(current_price * 1.2),
-            "predicted_low": round(current_price * 0.9),
-            "best_buy_date": str(date.today()),
-            "price_history": []
-        }
+        return {"verdict": "buy", "confidence": 0.82, "reason": "Good time to book.", "current_price": round(current_price), "avg_14day": round(current_price * 1.08), "predicted_peak": round(current_price * 1.2), "predicted_low": round(current_price * 0.9), "best_buy_date": str(date.today()), "price_history": []}
 
 load_model()
