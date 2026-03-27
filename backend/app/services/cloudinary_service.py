@@ -1,31 +1,16 @@
 import cloudinary
 import cloudinary.utils
-import os
-import time
-import hashlib
+import os, time
 from dotenv import load_dotenv
 load_dotenv('.env')
 
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL", "")
-
-def setup_cloudinary():
-    if CLOUDINARY_URL and "your_cloudinary" not in CLOUDINARY_URL:
-        cloudinary.config(cloudinary_url=CLOUDINARY_URL)
-        return True
-    return False
-
-IS_CONNECTED = setup_cloudinary()
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "dreb8pzbb"),
+    api_key=os.getenv("CLOUDINARY_API_KEY", "324125924744397"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", "qixdJbCNzKA84jkFPwZ0hmYwZIM")
+)
 
 def get_upload_url(trip_id: str, filename: str, location: str = ""):
-    if not IS_CONNECTED:
-        return {
-            "upload_url": "https://api.cloudinary.com/v1_1/demo/image/upload",
-            "signature": "mock-signature",
-            "timestamp": int(time.time()),
-            "public_id": f"tripdone/trips/{trip_id}/{filename}",
-            "cloud_name": "demo",
-            "api_key": "demo"
-        }
     try:
         timestamp = int(time.time())
         public_id = f"tripdone/trips/{trip_id}/{filename}"
@@ -41,4 +26,9 @@ def get_upload_url(trip_id: str, filename: str, location: str = ""):
         }
     except Exception as e:
         print(f"Cloudinary error: {e}")
-        return {"upload_url": "mock", "signature": "mock", "timestamp": int(time.time()), "public_id": f"tripdone/{trip_id}"}
+        return {
+            "upload_url": "https://api.cloudinary.com/v1_1/dreb8pzbb/image/upload",
+            "signature": "mock",
+            "timestamp": int(time.time()),
+            "public_id": f"tripdone/{trip_id}"
+        }
