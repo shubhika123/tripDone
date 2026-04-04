@@ -40,16 +40,39 @@ export default function SearchBox() {
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (!searchState.from || !searchState.to) {
+      alert("Please enter a departure and destination.");
+      return;
+    }
     setLoading(true);
     try {
-      await fetch('/api/search', {
+      const res = await fetch('https://tripdone-crl1.onrender.com/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(searchState),
+        body: JSON.stringify({
+          from_city: searchState.from,
+          to_city: searchState.to,
+          date: searchState.departureDate,
+          modes: ['flight', 'train', 'bus', 'cab'],
+          adults: searchState.adults || 1
+        }),
+      });
+      if (!res.ok) throw new Error('API failed');
+      const data = await res.json();
+      
+      searchState.setSearch({
+        routes: data.routes || [],
+        flights: data.flights || [],
+        trains: data.trains || [],
+        taxi: data.taxi || []
       });
       router.push('/routes');
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+      searchState.setSearch({ routes: [], flights: [], trains: [], taxi: [] });
+      alert("Failed to load routes from backend. Displaying fallback.");
+      router.push('/routes');
+    } finally {
       setLoading(false);
     }
   };
@@ -83,7 +106,7 @@ export default function SearchBox() {
       </div>
       
       <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 relative">
+        <div id="tour-inputs" className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 relative">
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <MapPin className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
@@ -122,18 +145,13 @@ export default function SearchBox() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Popover open={depOpen} onOpenChange={setDepOpen}>
-            <PopoverTrigger asChild>
-              <button 
-                type="button"
-                className="relative group w-full border border-gray-200 rounded-2xl bg-gray-50/50 hover:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex items-center text-left"
-              >
-                <div className="pl-4 flex items-center pointer-events-none z-10">
-                  <Calendar className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-                <div className="pl-3 pr-4 py-4 flex items-center flex-1 z-0">
-                  {renderDate(searchState.departureDate, 'Departure date')}
-                </div>
-              </button>
+            <PopoverTrigger className="relative group w-full border border-gray-200 rounded-2xl bg-gray-50/50 hover:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex items-center text-left cursor-pointer outline-none block">
+              <div className="pl-4 flex items-center pointer-events-none z-10">
+                <Calendar className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              </div>
+              <div className="pl-3 pr-4 py-4 flex items-center flex-1 z-0">
+                {renderDate(searchState.departureDate, 'Departure date')}
+              </div>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <CalendarPicker
@@ -147,18 +165,13 @@ export default function SearchBox() {
           
           {searchState.tripType === 'round-trip' ? (
             <Popover open={retOpen} onOpenChange={setRetOpen}>
-              <PopoverTrigger asChild>
-                <button 
-                  type="button"
-                  className="relative group w-full border border-gray-200 rounded-2xl bg-gray-50/50 hover:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex items-center text-left"
-                >
-                  <div className="pl-4 flex items-center pointer-events-none z-10">
-                    <Calendar className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                  </div>
-                  <div className="pl-3 pr-4 py-4 flex items-center flex-1 z-0">
-                    {renderDate(searchState.returnDate, 'Return date')}
-                  </div>
-                </button>
+              <PopoverTrigger className="relative group w-full border border-gray-200 rounded-2xl bg-gray-50/50 hover:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden flex items-center text-left cursor-pointer outline-none block">
+                <div className="pl-4 flex items-center pointer-events-none z-10">
+                  <Calendar className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                </div>
+                <div className="pl-3 pr-4 py-4 flex items-center flex-1 z-0">
+                  {renderDate(searchState.returnDate, 'Return date')}
+                </div>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarPicker
@@ -199,6 +212,7 @@ export default function SearchBox() {
           </div>
           
           <button
+            id="tour-search"
             type="submit"
             disabled={loading}
             className="w-full sm:w-auto flex items-center justify-center px-10 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-bold rounded-2xl hover:from-gray-800 hover:to-gray-700 transition-all shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2)] transform hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] active:translate-y-0 text-lg group disabled:opacity-80 disabled:cursor-not-allowed disabled:transform-none"
