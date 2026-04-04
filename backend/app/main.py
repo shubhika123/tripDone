@@ -1,3 +1,4 @@
+from app.routers.delay import router as delay_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -21,6 +22,8 @@ app.add_middleware(
 )
 
 # ── Health check ──────────────────────────────────────────────────────────────
+app.include_router(delay_router)
+
 @app.get("/")
 def root():
     return {"status": "TripDone API running", "version": "1.0.0"}
