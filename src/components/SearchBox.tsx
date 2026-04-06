@@ -53,7 +53,7 @@ export default function SearchBox() {
       for (let i = 0; i < 6; i++) {
         try { await fetch('https://tripdone-crl1.onrender.com/'); break; } catch { await new Promise(r => setTimeout(r, 5000)); }
       }
-      const res = await fetch('https://tripdone-crl1.onrender.com/api/search', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://tripdone-crl1.onrender.com') + '/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
