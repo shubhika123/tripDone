@@ -1,0 +1,127 @@
+{
+  "verdict": "buy",
+  "confidence": 0.65,
+  "reason": "Price may drop in 250 days. Book now.",
+  "current_price": 4200,
+  "avg_14day": 4410,
+  "predicted_peak": 4956,
+  "predicted_low": 3696,
+  "best_buy_date": "2026-04-04",
+  "price_history": [
+    {
+      "date": "2026-04-01",
+      "price": 4076,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 3787,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4037,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4119,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4326,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4119,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4519,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4015,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4324,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4288,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4501,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 3953,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-01",
+      "price": 4027,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-02",
+      "price": 4260,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-03",
+      "price": 4073,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-04",
+      "price": 3920,
+      "predicted": false
+    },
+    {
+      "date": "2026-04-05",
+      "price": 4116,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-06",
+      "price": 4032,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-07",
+      "price": 3948,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-08",
+      "price": 3864,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-09",
+      "price": 3780,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-10",
+      "price": 3696,
+      "predicted": true
+    },
+    {
+      "date": "2026-04-11",
+      "price": 3612,
+      "predicted": true
+    }
+  ]
+}
