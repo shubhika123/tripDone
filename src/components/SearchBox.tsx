@@ -49,6 +49,10 @@ export default function SearchBox() {
       // Wake up render if sleeping
       try { await fetch('https://tripdone-crl1.onrender.com/'); } catch {}
       
+      // Wake render from sleep - wait up to 30s
+      for (let i = 0; i < 6; i++) {
+        try { await fetch('https://tripdone-crl1.onrender.com/'); break; } catch { await new Promise(r => setTimeout(r, 5000)); }
+      }
       const res = await fetch('https://tripdone-crl1.onrender.com/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
