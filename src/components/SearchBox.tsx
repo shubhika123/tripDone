@@ -46,6 +46,9 @@ export default function SearchBox() {
     }
     setLoading(true);
     try {
+      // Wake up render if sleeping
+      try { await fetch('https://tripdone-crl1.onrender.com/'); } catch {}
+      
       const res = await fetch('https://tripdone-crl1.onrender.com/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
