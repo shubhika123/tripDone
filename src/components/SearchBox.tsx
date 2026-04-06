@@ -83,7 +83,8 @@ export default function SearchBox() {
       });
       router.push('/routes');
     } catch (err) {
-      console.error(err);
+      console.error('SEARCH ERROR:', err);
+      alert('Error: ' + String(err));
       searchState.setSearch({ routes: [], flights: [], trains: [], taxi: [] });
       alert("Failed to load routes from backend. Displaying fallback.");
       router.push('/routes');
