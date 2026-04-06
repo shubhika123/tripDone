@@ -60,8 +60,20 @@ export default function SearchBox() {
       if (!res.ok) throw new Error('API failed');
       const data = await res.json();
       
+      const mappedRoutes = (data.routes || []).map((r: any) => ({
+        ...r,
+        totalPrice: r.total_cost || r.totalPrice || r.price,
+        totalDuration: r.duration || r.totalDuration,
+        legs: (r.legs || []).map((leg: any) => ({
+          ...leg,
+          origin: leg.from || leg.origin,
+          destination: leg.to || leg.destination,
+          departureTime: leg.dep || leg.departureTime,
+          arrivalTime: leg.arr || leg.arrivalTime,
+        }))
+      }));
       searchState.setSearch({
-        routes: data.routes || [],
+        routes: mappedRoutes,
         flights: data.flights || [],
         trains: data.trains || [],
         taxi: data.taxi || []
