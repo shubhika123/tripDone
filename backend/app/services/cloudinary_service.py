@@ -1,3 +1,8 @@
+import os
+# Clear CLOUDINARY_URL before import — the cloudinary package auto-parses it
+# on import and crashes if the format is wrong. We configure manually below.
+os.environ.pop("CLOUDINARY_URL", None)
+
 import cloudinary
 import cloudinary.utils
 import cloudinary.uploader
@@ -8,6 +13,7 @@ cloudinary.config(
     api_key="324125924744397",
     api_secret="qixdJbCNzKA84jkFPwZ0hmYwZIM"
 )
+
 
 def get_upload_url(trip_id: str, filename: str, location: str = ""):
     try:
