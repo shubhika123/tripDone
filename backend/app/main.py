@@ -19,8 +19,10 @@ app = FastAPI(title="TripDone API", version="1.0.0")
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://tripdone.vercel.app",
+    "https://tripdone-live.vercel.app",
     "https://tripdone-xi.vercel.app", # Potential staging/alternative
 ]
+
 
 app.add_middleware(
     CORSMiddleware,

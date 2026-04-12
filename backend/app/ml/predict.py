@@ -13,12 +13,24 @@ scaler = None
 def load_model():
     global model, scaler
     if os.path.exists(MODEL_PATH):
-        model = joblib.load(MODEL_PATH)
-        scaler = joblib.load(SCALER_PATH)
-        print("ML model loaded")
+        try:
+            model = joblib.load(MODEL_PATH)
+            scaler = joblib.load(SCALER_PATH)
+            print("ML model loaded successfully")
+        except Exception as e:
+            print(f"Error loading pickle files: {e}")
+            model, scaler = None, None
 
 def predict_price(route: str, travel_date: str, current_price: float):
+    global model, scaler
     try:
+        # Lazy load model on first request
+        if model is None:
+            try:
+                load_model()
+            except Exception as e:
+                print(f"Lazy load failed: {e}")
+
         target = datetime.strptime(travel_date, "%Y-%m-%d").date()
         days_to_dep = max(1, (target - date.today()).days)
         dow = target.weekday()
@@ -62,4 +74,4 @@ def predict_price(route: str, travel_date: str, current_price: float):
         print(f"Predict error: {e}")
         return {"verdict": "buy", "confidence": 0.82, "reason": "Good time to book.", "current_price": round(current_price), "avg_14day": round(current_price * 1.08), "predicted_peak": round(current_price * 1.2), "predicted_low": round(current_price * 0.9), "best_buy_date": str(date.today()), "price_history": []}
 
-load_model()
+# load_model() - Removed for lazy loading
