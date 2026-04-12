@@ -6,22 +6,33 @@ import { useState, useEffect } from 'react'
 import { Plane, Train, Bus, Car, CheckCircle, ArrowRight, Clock, Info, ShieldCheck, Zap, Bell, Check } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 
+import { useTranslation } from '@/hooks/useTranslation'
+import { useCurrency } from '@/hooks/useCurrency'
+
 export default function SummaryPage() {
+  const { t, hasHydrated: tHydrated } = useTranslation()
+  const { tPrice, hasHydrated: cHydrated } = useCurrency()
+  const hasHydrated = tHydrated && cHydrated
   const router = useRouter()
   const searchState = useSearchStore()
   
   const [isAutoBookEnabled, setIsAutoBookEnabled] = useState(false)
   const [isFinalConfirmed, setIsFinalConfirmed] = useState(false)
   const [phoneInput, setPhoneInput] = useState(searchState.phoneNumber || '')
-  const [alertStatus, setAlertStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(searchState.alertEnabled ? 'success' : 'idle')
+  const [alertStatus, setAlertStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(searchState.alertEnabled || false ? 'success' : 'idle')
 
   useEffect(() => {
-    if (!searchState.from || !searchState.to || (!searchState.selectedRoute && searchState.selectedModes.length === 0)) {
+    if (hasHydrated && (!searchState.from || !searchState.to || (!searchState.selectedRoute && searchState.selectedModes.length === 0))) {
       router.replace('/')
     }
-  }, [searchState, router])
+  }, [hasHydrated, searchState, router])
 
-  if (!searchState.from || !searchState.to) return null;
+  if (!hasHydrated) return (
+    <div className="min-h-screen bg-gray-50/30 flex flex-col items-center justify-center space-y-4 font-sans">
+      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+      <p className="text-gray-500 font-medium animate-pulse">{t('loading') || 'Generating your summary...'}</p>
+    </div>
+  );
 
   const parseMins = (timeStr: string) => {
     if (!timeStr) return 0;
@@ -140,7 +151,7 @@ export default function SummaryPage() {
     setAlertStatus('loading');
     
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tripdone-crl1.onrender.com'
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tripdone-crl1.onrender.com'
       await fetch(`${baseUrl}/api/alerts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -176,14 +187,14 @@ export default function SummaryPage() {
              <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 transform scale-110">
                 <CheckCircle className="w-12 h-12" />
              </div>
-             <h1 className="text-3xl font-black text-gray-900 mb-4">Trip Finalized!</h1>
-             <p className="text-gray-500 font-semibold mb-8">Your complete journey from {searchState.from} to {searchState.to} is successfully planned.</p>
-             <button 
-                 onClick={() => router.push('/')}
-                 className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl w-full hover:bg-gray-800 transition-colors shadow-lg active:scale-95"
-             >
-                 Return to Home
-             </button>
+              <h1 className="text-3xl font-black text-gray-900 mb-4">{t('allDone')}</h1>
+              <p className="text-gray-500 font-semibold mb-8">{t('heroSubtitle').split('.')[0]} {searchState.from} to {searchState.to}</p>
+              <button 
+                  onClick={() => router.push('/')}
+                  className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl w-full hover:bg-gray-800 transition-colors shadow-lg active:scale-95"
+              >
+                  {t('viewAllHistory')}
+              </button>
           </div>
         </div>
       )
@@ -195,8 +206,8 @@ export default function SummaryPage() {
 
       <div className="bg-gray-900 text-white pt-10 pb-20 rounded-b-[40px] shadow-lg sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 flex flex-col items-center text-center">
-            <h1 className="text-2xl font-black mb-2 tracking-tight">Trip Summary</h1>
-            <p className="text-gray-400 font-medium text-sm mb-10">Review your complete journey before booking</p>
+            <h1 className="text-2xl font-black mb-2 tracking-tight">{t('summary')}</h1>
+            <p className="text-gray-400 font-medium text-sm mb-10">{t('heroSubtitle')}</p>
 
             <div className="flex items-center justify-center w-full max-w-2xl relative px-4">
               <div className="absolute top-1/2 left-10 right-10 h-0.5 bg-gray-700 -translate-y-1/2 z-0"></div>
@@ -215,21 +226,21 @@ export default function SummaryPage() {
           
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-xl flex flex-col items-center justify-center text-center">
-               <span className="text-gray-500 font-bold text-sm mb-2 uppercase tracking-wide">Total Price</span>
+               <span className="text-gray-500 font-bold text-sm mb-2 uppercase tracking-wide">{t('totalPrice')}</span>
                {totalTripPrice > 0 ? (
-                  <span className="text-4xl font-black text-gray-900 tracking-tight">₹{totalTripPrice.toLocaleString()}</span>
+                  <span className="text-4xl font-black text-gray-900 tracking-tight">{tPrice(totalTripPrice)}</span>
                ) : (
-                  <span className="text-xl font-bold text-gray-400">Price unavailable</span>
+                  <span className="text-xl font-bold text-gray-400">{t('noAvailable', { mode: '' })}</span>
                )}
             </div>
             <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-xl flex flex-col items-center justify-center text-center">
-               <span className="text-gray-500 font-bold text-sm mb-2 uppercase tracking-wide">Total Time</span>
+               <span className="text-gray-500 font-bold text-sm mb-2 uppercase tracking-wide">{t('departure')} Time</span>
                <span className="text-4xl font-black text-gray-900 tracking-tight">{formatMins(totalTripMins)}</span>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center text-center text-white">
                <span className="text-green-100 font-bold text-sm mb-2 uppercase tracking-wide flex items-center"><ShieldCheck className="w-4 h-4 mr-1" /> Smart Savings</span>
                <span className="text-2xl font-black tracking-tight mb-1 font-sans">Awesome! 🎉</span>
-               <span className="text-sm font-semibold opacity-90">You saved ₹{savings.toLocaleString()} vs fastest route</span>
+               <span className="text-sm font-semibold opacity-90">You saved {tPrice(savings)} vs fastest route</span>
             </div>
         </div>
 
@@ -240,7 +251,7 @@ export default function SummaryPage() {
                if (!mode.obj && !mode.routeLeg && !mode.skipped) return null;
 
                const isSkipped = mode.skipped;
-               const title = mode.id === 'flight' ? mode.obj?.airline : mode.id === 'train' ? mode.obj?.trainName : mode.id === 'bus' ? mode.obj?.operator : mode.id === 'cab' ? `${mode.obj?.type || 'Cab'}` : mode.name;
+               const title = mode.obj?.name || mode.routeLeg?.name || (mode.id === 'flight' ? mode.obj?.airline : mode.id === 'train' ? mode.obj?.trainName : mode.id === 'bus' ? mode.obj?.operator : mode.id === 'cab' ? `${mode.obj?.type || 'Cab'}` : mode.name);
                
                let timingLine = '';
                const timeDuration = mode.obj?.duration || mode.routeLeg?.duration || '1h';
@@ -266,23 +277,23 @@ export default function SummaryPage() {
                     </div>
                     
                     <div className="flex flex-col sm:items-end w-full sm:w-auto mt-2 sm:mt-0">
-                       {isSkipped ? (
+                        {isSkipped ? (
                           <div className="flex items-center text-sm font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100 self-start sm:self-auto">
-                             <CheckCircle className="w-4 h-4 mr-1.5" /> Already booked externally
+                             <CheckCircle className="w-4 h-4 mr-1.5" /> {t('alreadyBooked')}
                           </div>
                        ) : (
                           <>
                              {mode.finalPrice > 0 ? (
-                                <div className="text-2xl font-black text-gray-900 sm:text-right">₹{mode.finalPrice.toLocaleString()}</div>
+                                <div className="text-2xl font-black text-gray-900 sm:text-right">{tPrice(mode.finalPrice)}</div>
                              ) : (
-                                <div className="text-sm font-bold text-gray-400 sm:text-right">Price unavailable</div>
+                                <div className="text-sm font-bold text-gray-400 sm:text-right">{t('noAvailable', { mode: '' })}</div>
                              )}
                              <button 
                                className={`mt-2 text-sm font-bold w-full sm:w-max px-6 py-2 rounded-xl transition-all shadow-sm flex justify-center items-center ${isAutoBookEnabled || mode.finalPrice === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'}`}
                                disabled={isAutoBookEnabled || mode.finalPrice === 0}
                                onClick={() => window.open('https://google.com', '_blank')}
                              >
-                               Book Now
+                               {t('selectRoute')}
                              </button>
                           </>
                        )}
@@ -340,10 +351,27 @@ export default function SummaryPage() {
 
       <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.1)] py-5 z-[100]">
         <div className="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-           <div>
-              <div className="text-gray-500 font-bold text-xs uppercase tracking-wider mb-1">Total Payable Now</div>
+           <div className="flex-1 w-full md:w-auto">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar -mx-1 px-1">
+                 {processedModes.map((m, idx) => {
+                    if (m.skipped || m.finalPrice <= 0) return null;
+                    return (
+                       <div key={idx} className="flex items-center bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl shrink-0">
+                          <span className={`${m.color === 'blue' ? 'text-blue-600' : m.color === 'green' ? 'text-green-600' : m.color === 'orange' ? 'text-orange-600' : 'text-indigo-600'} mr-2`}>
+                             {m.icon}
+                          </span>
+                          <span className="text-xs font-black text-gray-900">{tPrice(m.finalPrice)}</span>
+                       </div>
+                    )
+                 })}
+              </div>
+              <div className="text-gray-500 font-bold text-[10px] uppercase tracking-wider mt-1 flex items-center gap-2">
+                 Total Payable Now 
+                 <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                 <span className="text-gray-400 normal-case font-medium">All charges included</span>
+              </div>
               {totalTripPrice > 0 ? (
-                 <div className="text-3xl font-black text-gray-900 tracking-tight">₹{totalTripPrice.toLocaleString()}</div>
+                 <div className="text-3xl font-black text-gray-900 tracking-tight leading-none mt-1">{tPrice(totalTripPrice)}</div>
               ) : (
                  <div className="text-lg font-bold text-gray-400">Price unavailable</div>
               )}
@@ -353,7 +381,7 @@ export default function SummaryPage() {
               onClick={handleBookAll}
               className="flex items-center px-10 py-4 bg-indigo-600 text-white font-black text-lg rounded-2xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30 active:scale-95 w-full md:w-auto justify-center"
            >
-              {isAutoBookEnabled ? 'Confirm Auto-Book' : 'Book Entire Trip'}
+              {isAutoBookEnabled ? t('confirmBookings') : t('confirmBookings')}
               <ArrowRight className="w-6 h-6 ml-2" />
            </button>
         </div>
