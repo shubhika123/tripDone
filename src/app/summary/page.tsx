@@ -151,8 +151,8 @@ export default function SummaryPage() {
     setAlertStatus('loading');
     
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tripdone-crl1.onrender.com'
-      await fetch(`${baseUrl}/api/alerts`, {
+      await fetch('/api/alerts', {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

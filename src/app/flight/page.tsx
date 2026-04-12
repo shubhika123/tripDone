@@ -54,8 +54,7 @@ export default function FlightPage() {
   const { data: priceIntelRaw, error: intelError } = useQuery({
     queryKey: ['price-predict', routeParams, dateParams, currentPrice],
     queryFn: async () => {
-      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tripdone-crl1.onrender.com'
-      const res = await fetch(`${baseUrl}/api/predict?route=${routeParams}&date=${dateParams}&current_price=${currentPrice}`)
+      const res = await fetch(`/api/predict?route=${routeParams}&date=${dateParams}&current_price=${currentPrice}`)
       if (!res.ok) throw new Error('Prediction API failed')
       return res.json()
     },
@@ -132,8 +131,7 @@ export default function FlightPage() {
 
   const alertMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tripdone-crl1.onrender.com'
-      const res = await fetch(`${baseUrl}/api/alerts`, {
+      const res = await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
