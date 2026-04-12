@@ -7,10 +7,22 @@ import { useSearchStore } from '@/store/useSearchStore';
 import { useState, useEffect } from 'react';
 import OnboardingGuide from '@/components/OnboardingGuide';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
+interface SearchRoute {
+  tripType: 'one-way' | 'round-trip';
+  from: string;
+  to: string;
+  departureDate: string;
+  returnDate: string | null;
+  flexibility: string;
+}
+
 export default function Home() {
+  const { t, hasHydrated } = useTranslation();
   const searchState = useSearchStore();
 
-  const defaultIndiaRoutes = [
+  const defaultIndiaRoutes: SearchRoute[] = [
     { tripType: 'one-way', from: 'Delhi', to: 'Mumbai', departureDate: '2026-11-01', returnDate: null, flexibility: 'exact' },
     { tripType: 'round-trip', from: 'Bangalore', to: 'Hyderabad', departureDate: '2026-12-10', returnDate: '2026-12-15', flexibility: '±2' },
     { tripType: 'one-way', from: 'Chandigarh', to: 'Delhi', departureDate: '2026-10-20', returnDate: null, flexibility: 'exact' },
@@ -54,11 +66,22 @@ export default function Home() {
 
         <div className="text-center space-y-4 mb-6 relative z-10">
           <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-[1.1]">
-            Plan the smartest way to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">travel</span> <br className="hidden md:block"/>
-            across every mode.
+            <span className={hasHydrated ? '' : 'opacity-0'}>
+              {t('heroTitle').split(/(\{highlight\}.*?\{\/highlight\})/g).map((part, i) => {
+                if (part.startsWith('{highlight}')) {
+                  const content = part.replace('{highlight}', '').replace('{/highlight}', '');
+                  return (
+                    <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                      {content}
+                    </span>
+                  );
+                }
+                return <span key={i}>{part}</span>;
+              })}
+            </span>
           </h1>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
-            Compare flights, trains, buses, and cabs — all in one seamless journey. Stop checking five different tabs.
+          <p className={`text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed transition-opacity duration-300 ${hasHydrated ? 'opacity-100' : 'opacity-0'}`}>
+            {t('heroSubtitle')}
           </p>
         </div>
 
@@ -70,9 +93,9 @@ export default function Home() {
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-gray-400" />
-              Recent Searches
+              {t('recentSearches')}
             </h3>
-            <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">View all history</button>
+            <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">{t('viewAllHistory')}</button>
           </div>
           
           <div id="tour-recent" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

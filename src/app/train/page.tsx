@@ -6,7 +6,13 @@ import { useState, useEffect } from 'react'
 import { Train, ChevronDown, ChevronUp, CheckCircle, Lock, ArrowRight, Star } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 
+import { useTranslation } from '@/hooks/useTranslation'
+import { useCurrency } from '@/hooks/useCurrency'
+
 export default function TrainPage() {
+  const { t, hasHydrated: tHydrated } = useTranslation()
+  const { tPrice, hasHydrated: cHydrated } = useCurrency()
+  const hasHydrated = tHydrated && cHydrated
   const router = useRouter()
   const searchState = useSearchStore()
   
@@ -17,11 +23,17 @@ export default function TrainPage() {
   const [showProModal, setShowProModal] = useState(false)
 
   useEffect(() => {
-    // If we're missing search data or train isn't in selected modes, redirect home
-    if (!searchState.from || !searchState.to || !searchState.selectedModes.includes('train')) {
+    if (hasHydrated && (!searchState.from || !searchState.to || !searchState.selectedModes.includes('train'))) {
       router.replace('/')
     }
-  }, [searchState, router])
+  }, [hasHydrated, searchState, router])
+
+  if (!hasHydrated) return (
+    <div className="min-h-screen bg-gray-50/30 flex flex-col items-center justify-center space-y-4 font-sans">
+      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+      <p className="text-gray-500 font-medium animate-pulse">{t('loading') || 'Searching for trains...'}</p>
+    </div>
+  );
 
   const trains = searchState.trains || []
   
@@ -145,7 +157,7 @@ export default function TrainPage() {
             </div>
 
             <div className="text-right flex flex-col items-end">
-              <div className="text-2xl font-black text-gray-900">Starts at ₹{basePrice.toLocaleString()}</div>
+              <div className="text-2xl font-black text-gray-900">{tPrice(basePrice)}</div>
               
               {isTopTrain && (
                 <div className="mt-1 relative group inline-flex items-center" onClick={(e) => { e.stopPropagation(); setShowProModal(true); }}>
@@ -183,7 +195,7 @@ export default function TrainPage() {
                               className={`flex-shrink-0 min-w-[120px] p-4 rounded-2xl flex flex-col items-center justify-center border transition-all ${isSeatSelected ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-900 hover:border-indigo-300'}`}
                             >
                                 <span className="font-black text-lg mb-1">{seat.label}</span>
-                                <span className={isSeatSelected ? 'text-indigo-100 font-semibold' : 'text-gray-500 font-semibold'}>₹{seatPrice.toLocaleString()}</span>
+                                <span className={isSeatSelected ? 'text-indigo-100 font-semibold' : 'text-gray-500 font-semibold'}>{tPrice(seatPrice)}</span>
                             </button>
                         )
                     })}
@@ -205,7 +217,7 @@ export default function TrainPage() {
                                 className={`p-4 rounded-xl flex items-center justify-between border transition-all ${isPlatformSelected ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-1 ring-indigo-500 shadow-sm' : 'bg-white border-gray-200 text-gray-900 hover:border-indigo-300'}`}
                                 >
                                 <span className="font-bold">{platform}</span>
-                                <span className="font-black">₹{finalPrice.toLocaleString()}</span>
+                                <span className="font-black">{tPrice(finalPrice)}</span>
                                 </button>
                             )
                         })}
@@ -310,7 +322,7 @@ export default function TrainPage() {
                 <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Unlock Pro</h3>
                 <p className="text-center text-gray-600 mb-6 font-medium">Upgrade to Pro to see exact confirmation chances and get AI predictions.</p>
                 <div className="space-y-3">
-                   <button onClick={() => setShowProModal(false)} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-600/30">Get Pro for ₹99/mo</button>
+                   <button onClick={() => setShowProModal(false)} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-600/30">Get Pro for {tPrice(99)}/mo</button>
                    <button onClick={() => setShowProModal(false)} className="w-full py-3.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">Maybe Later</button>
                 </div>
              </div>

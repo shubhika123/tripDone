@@ -5,6 +5,8 @@ import { useSearchStore } from '@/store/useSearchStore'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Clock, Info, CheckCircle, ChevronDown, ChevronUp, Plane, Train, Car, Bus } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useCurrency } from '@/hooks/useCurrency'
 import Navbar from '@/components/Navbar'
 
 const parseDurationToMins = (durationStr: string) => {
@@ -30,17 +32,25 @@ const getModeIcon = (mode: string, className: string = "w-4 h-4") => {
 }
 
 export default function RoutesPage() {
+  const { t, language, hasHydrated: tHydrated } = useTranslation()
+  const { tPrice, hasHydrated: cHydrated } = useCurrency()
+  const hasHydrated = tHydrated && cHydrated
   const searchState = useSearchStore()
   const router = useRouter()
   const [expandedRoute, setExpandedRoute] = useState<number | null>(null)
 
-
-
   useEffect(() => {
-    if (!searchState.from || !searchState.to) {
+    if (hasHydrated && (!searchState.from || !searchState.to)) {
       router.replace('/');
     }
-  }, [searchState.from, searchState.to, router]);
+  }, [searchState.from, searchState.to, router, hasHydrated]);
+
+  if (!hasHydrated) return (
+    <div className="min-h-screen bg-gray-50/30 flex flex-col items-center justify-center space-y-4">
+      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+      <p className="text-gray-500 font-medium animate-pulse">Loading amazing journeys...</p>
+    </div>
+  );
 
   const isLoading = false;
   const routes = searchState.routes || [];
@@ -78,7 +88,7 @@ export default function RoutesPage() {
   if (cheapestIdx === fastestIdx) fastestIdx = -1;
 
   const sortedRoutes = [...routes].map((r: any, i) => {
-    let rawScore = (r._calcPrice || 5000) * (parseDurationToMins(r.totalDuration || r.duration || '0h') || 1);
+    const rawScore = (r._calcPrice || 5000) * (parseDurationToMins(r.totalDuration || r.duration || '0h') || 1);
     return { ...r, _originalIdx: i, _score: rawScore };
   }).sort((a, b) => a._score - b._score);
 
@@ -118,13 +128,13 @@ export default function RoutesPage() {
                 <span>{searchState.to || '---'}</span>
               </div>
               <div className="text-sm font-medium text-gray-500">
-                {searchState.departureDate ? new Date(searchState.departureDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Any date'}
-                {' '}• {searchState.tripType === 'round-trip' ? 'Round-trip' : 'One-way'}
+                {searchState.departureDate ? new Date(searchState.departureDate).toLocaleDateString(language === 'HI' ? 'hi-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : t('anyDate')}
+                {' '}• {searchState.tripType === 'round-trip' ? t('roundTrip') : t('oneWay')}
               </div>
             </div>
           </div>
           <button onClick={() => router.push('/')} className="px-5 py-2 text-sm font-bold bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors">
-            Edit Search
+            {t('editSearch')}
           </button>
         </div>
       </div>
@@ -132,6 +142,24 @@ export default function RoutesPage() {
       <main className="max-w-5xl mx-auto px-4 py-10 pb-32 w-full">
         <div className="w-full flex flex-col items-center">
           
+          {(searchState.isFallback || routes.some((r: any) => r.legs?.some((l: any) => l.is_offline))) && (
+            <div className="w-full max-w-4xl mb-8 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-4 shrink-0">
+                <Info className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-orange-900 text-sm">{t('offlineResults')}</h4>
+                <p className="text-orange-700 text-xs">{t('offlineDesc')}</p>
+              </div>
+              <button 
+                onClick={() => router.push('/')}
+                className="ml-auto px-4 py-2 bg-orange-600 text-white text-xs font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-sm"
+              >
+                {t('retryLive')}
+              </button>
+            </div>
+          )}
+
           <div className="space-y-6 w-full">
             
             {isLoading && (
@@ -144,7 +172,7 @@ export default function RoutesPage() {
 
             {!isLoading && sortedRoutes.length === 0 && (
               <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
-                <p className="text-xl text-gray-500 font-medium">No routes found.</p>
+                <p className="text-xl text-gray-500 font-medium">{t('noRoutes')}</p>
               </div>
             )}
 
@@ -166,13 +194,19 @@ export default function RoutesPage() {
                   <div className="p-8">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex gap-2">
-                        {isBest && <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-md tracking-wide shadow-sm flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> BEST OPTION</span>}
-                        {isCheapest && <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md tracking-wide flex items-center">CHEAPEST</span>}
-                        {isFastest && <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md tracking-wide flex items-center">FASTEST</span>}
+                        {isBest && <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-md tracking-wide shadow-sm flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> {t('bestOption')}</span>}
+                        {isCheapest && <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md tracking-wide flex items-center">{t('cheapest')}</span>}
+                        {isFastest && <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md tracking-wide flex items-center">{t('fastest')}</span>}
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-black text-gray-900">₹{(route._calcPrice || 0).toLocaleString()}</div>
-                        <div className="text-sm font-semibold text-gray-500">{route.totalDuration || route.duration || 'N/A'}</div>
+                        <div className="text-2xl font-black text-gray-900">{tPrice(route._calcPrice || 0)}</div>
+                        <div className="text-sm font-semibold text-gray-500 mb-1">{route.totalDuration || route.duration || 'N/A'}</div>
+                        {legs.some((l: any) => l.confidence_score) && (
+                          <div className="flex items-center justify-end space-x-1.5">
+                             <div className={`w-1.5 h-1.5 rounded-full ${legs.some((l: any) => l.confidence_color === 'red') ? 'bg-red-500' : legs.some((l: any) => l.confidence_color === 'yellow') ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                             <span className="text-[10px] font-black uppercase tracking-tighter text-gray-400">{t('reliability')}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -188,7 +222,9 @@ export default function RoutesPage() {
                           `}>
                             {getModeIcon(leg.mode || 'info', "w-5 h-5")}
                           </div>
-                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest bg-white px-2 group-hover:text-gray-800 transition-colors">{leg.mode}</span>
+                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest bg-white px-2 group-hover:text-gray-800 transition-colors text-center max-w-[80px] truncate">
+                            {leg.name || t((leg.mode?.toLowerCase() || 'flight') as any)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -196,13 +232,13 @@ export default function RoutesPage() {
                     <div className="flex justify-between items-center mt-2 pt-4 border-t border-gray-100">
                       <button className="text-sm font-semibold text-gray-500 hover:text-gray-800 flex items-center">
                         {isExpanded ? <ChevronUp className="w-4 h-4 mr-1" /> : <ChevronDown className="w-4 h-4 mr-1" />}
-                        {isExpanded ? 'Hide Details' : 'View Breakdown'}
+                        {isExpanded ? t('hideDetails') : t('viewBreakdown')}
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleSelectRoute(route); }}
                         className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors shadow-md hover:shadow-lg transform active:scale-95 z-10"
                       >
-                        Select Route
+                        {t('selectRoute')}
                       </button>
                     </div>
                   </div>
@@ -217,8 +253,14 @@ export default function RoutesPage() {
                               <div>
                                 <div className="font-bold text-gray-900 flex items-center">
                                   {getModeIcon(leg.mode || 'info')}
-                                  <span className="ml-2 capitalize">{leg.mode}</span>
+                                  <span className="ml-2 capitalize leading-tight">
+                                    <div className="text-gray-900 font-bold">{leg.name || t((leg.mode?.toLowerCase() || 'flight') as any)}</div>
+                                    {leg.airline_logo && <img src={leg.airline_logo} alt="logo" className="h-4 mt-1" />}
+                                  </span>
                                 </div>
+                                <p className="text-sm font-bold text-gray-900">
+                                  {tPrice(leg.selectedOption?.price || leg.price || 0)}
+                                </p>
                                 <div className="text-sm text-gray-500 font-medium">
                                   {leg.origin} → {leg.destination}
                                 </div>
@@ -232,8 +274,33 @@ export default function RoutesPage() {
                             {i < legs.length - 1 && legs[i+1]?.departureTime && leg.arrivalTime && (
                                <div className="my-4 p-3 bg-white rounded-xl text-sm font-semibold text-gray-500 w-max border border-gray-200 shadow-sm flex items-center">
                                  <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                                 Layover at {leg.destination}
+                                 {t('layoverAt')} {leg.destination}
                                </div>
+                            )}
+
+                            {/* Confidence Score for Trains/Flights */}
+                            {(leg.confidence_score || leg.confidence_label) && (
+                              <div className="mt-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <div className={`w-2 h-2 rounded-full animate-pulse ${leg.confidence_color === 'green' ? 'bg-green-500' : leg.confidence_color === 'red' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                                    <span className="text-sm font-bold text-gray-900">{t('reliability')}</span>
+                                  </div>
+                                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-md ${leg.confidence_color === 'green' ? 'bg-green-100 text-green-700' : leg.confidence_color === 'red' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {leg.confidence_label}
+                                  </span>
+                                </div>
+                                <div className="flex items-baseline space-x-2">
+                                  <span className="text-2xl font-black text-gray-900">{leg.confidence_score}%</span>
+                                  <span className="text-sm font-semibold text-gray-500">{leg.on_time_note}</span>
+                                </div>
+                                {leg.is_real_time && (
+                                  <div className="mt-2 flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg w-max uppercase tracking-wider">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    {t('livePrediction')}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         ))}

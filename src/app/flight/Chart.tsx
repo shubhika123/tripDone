@@ -2,7 +2,7 @@
 
 import { LineChart, Line, Tooltip, ResponsiveContainer, XAxis, YAxis, ReferenceLine } from 'recharts'
 
-export default function Chart({ chartData, currentPrice }: { chartData: any[], currentPrice?: number }) {
+export default function Chart({ chartData, currentPrice, tPrice }: { chartData: any[], currentPrice?: number, tPrice: (val: number) => string }) {
 
 
   return (
@@ -16,7 +16,7 @@ export default function Chart({ chartData, currentPrice }: { chartData: any[], c
              labelStyle={{ color: '#6b7280', marginBottom: '4px' }}
           />
           {currentPrice && currentPrice > 0 && (
-              <ReferenceLine y={currentPrice} stroke="#f59e0b" strokeDasharray="3 3" label={{ value: `Current ₹${currentPrice.toLocaleString()}`, position: 'top', fill: '#f59e0b', fontSize: 12, fontWeight: 'bold' }} />
+              <ReferenceLine y={currentPrice} stroke="#f59e0b" strokeDasharray="3 3" label={{ value: `Current ${tPrice(currentPrice)}`, position: 'top', fill: '#f59e0b', fontSize: 12, fontWeight: 'bold' }} />
           )}
           <Line type="monotone" dataKey="price" stroke="#4F46E5" strokeWidth={3} dot={{ r: 3, fill: '#4F46E5' }} />
         </LineChart>

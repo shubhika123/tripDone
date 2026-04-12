@@ -31,11 +31,12 @@ export interface SearchState {
   alertEnabled: boolean;
   phoneNumber: string;
   isProUnlocked: boolean;
+  isFallback: boolean;
   setProUnlocked: () => void;
   setSearch: (data: Partial<SearchState>) => void;
 }
 
-export const useSearchStore = create<SearchState>((set) => ({
+export const useSearchStore = create<SearchState>((set: any) => ({
   tripType: 'one-way',
   from: '',
   to: '',
@@ -66,6 +67,7 @@ export const useSearchStore = create<SearchState>((set) => ({
   alertEnabled: false,
   phoneNumber: '',
   isProUnlocked: false,
+  isFallback: false,
   setProUnlocked: () => set({ isProUnlocked: true }),
-  setSearch: (data) => set((state) => ({ ...state, ...data })),
+  setSearch: (data: Partial<SearchState>) => set((state: SearchState) => ({ ...state, ...data })),
 }));

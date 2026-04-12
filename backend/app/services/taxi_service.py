@@ -60,3 +60,8 @@ def calculate_taxi(from_city: str, to_city: str) -> list:
             "distance_km": distance,
         })
     return results
+
+async def get_taxi(from_city: str, to_city: str) -> list:
+    """Async-compatible wrapper that returns cab price estimates."""
+    return calculate_taxi(from_city, to_city)
+

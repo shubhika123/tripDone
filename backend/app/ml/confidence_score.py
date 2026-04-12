@@ -27,47 +27,61 @@ KNOWN_SCORES = {
     "19165": 48.9,  # Sabarmati Express — frequently delayed
 }
 
-def get_confidence(train_number: str, train_name: str = "") -> dict:
+def get_confidence(train_number: str, train_name: str = "", delay: int = None) -> dict:
     """
     Returns confidence score for a train.
-    Uses known data where available, estimates for unknown trains.
+    Uses real-time delay data if available, otherwise falls back to known data/estimates.
     """
-    score = KNOWN_SCORES.get(str(train_number))
+    is_real_time = delay is not None
+    
+    if is_real_time:
+        # Calculate real-time score: 100% minus penalty for delay
+        # 0 delay = 99.5%, 60 min delay = 60%, 120 min delay = 20%
+        score = max(5.0, 99.5 - (delay * 0.8))
+        delay_text = f"{delay}m delay" if delay > 0 else "On Time"
+        note_prefix = f"Live Status: {delay_text} — "
+    else:
+        score = KNOWN_SCORES.get(str(train_number))
+        note_prefix = ""
 
-    if score is None:
-        # Estimate based on train type from name
-        name_upper = train_name.upper()
-        if "VANDE BHARAT" in name_upper:
-            score = 90.0
-        elif "RAJDHANI" in name_upper:
-            score = 83.0
-        elif "SHATABDI" in name_upper:
-            score = 85.0
-        elif "DURONTO" in name_upper:
-            score = 78.0
-        elif "SF" in name_upper or "SUPERFAST" in name_upper:
-            score = 70.0
-        elif "EXPRESS" in name_upper:
-            score = 62.0
-        else:
-            # Use train number hash for consistency
-            import hashlib
-            h = int(hashlib.md5(str(train_number).encode()).hexdigest(), 16)
-            score = round(45 + (h % 40), 1)
+        if score is None:
+            # Estimate based on train type from name
+            name_upper = train_name.upper()
+            if "VANDE BHARAT" in name_upper:
+                score = 90.0
+            elif "RAJDHANI" in name_upper:
+                score = 83.0
+            elif "SHATABDI" in name_upper:
+                score = 85.0
+            elif "DURONTO" in name_upper:
+                score = 78.0
+            elif "SF" in name_upper or "SUPERFAST" in name_upper:
+                score = 70.0
+            elif "EXPRESS" in name_upper:
+                score = 62.0
+            else:
+                # Use train number hash for consistency
+                import hashlib
+                h = int(hashlib.md5(str(train_number).encode()).hexdigest(), 16)
+                score = round(45 + (h % 40), 1)
 
     if score >= 85:
         label, color = "High", "green"
-        note = f"{round(score)}% on time — Very reliable"
+        recommendation = "Reliable" if not is_real_time else "On Schedule"
+        note = f"{note_prefix}{round(score)}% Confidence — {recommendation}"
     elif score >= 65:
         label, color = "Medium", "yellow"
-        note = f"{round(score)}% on time — Usually punctual"
+        recommendation = "Usually Punctual" if not is_real_time else "Moderate Delay"
+        note = f"{note_prefix}{round(score)}% Confidence — {recommendation}"
     else:
         label, color = "Low", "red"
-        note = f"{round(score)}% on time — Frequently delayed"
+        recommendation = "Frequently Delayed" if not is_real_time else "Sig. Delay"
+        note = f"{note_prefix}{round(score)}% Confidence — {recommendation}"
 
     return {
         "confidence_score": round(score, 1),
         "confidence_label": label,
         "confidence_color": color,
-        "on_time_note": note
+        "on_time_note": note,
+        "is_real_time": is_real_time
     }

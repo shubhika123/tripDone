@@ -6,7 +6,13 @@ import { useState, useEffect } from 'react'
 import { Bus, ChevronDown, ChevronUp, CheckCircle, ArrowRight, Star, Clock } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 
+import { useTranslation } from '@/hooks/useTranslation'
+import { useCurrency } from '@/hooks/useCurrency'
+
 export default function BusPage() {
+  const { t, hasHydrated: tHydrated } = useTranslation()
+  const { tPrice, hasHydrated: cHydrated } = useCurrency()
+  const hasHydrated = tHydrated && cHydrated
   const router = useRouter()
   const searchState = useSearchStore()
   
@@ -14,10 +20,17 @@ export default function BusPage() {
   const [isBookedExternally, setIsBookedExternally] = useState(false)
 
   useEffect(() => {
-    if (!searchState.from || !searchState.to || !searchState.selectedModes.includes('bus')) {
+    if (hasHydrated && (!searchState.from || !searchState.to || !searchState.selectedModes.includes('bus'))) {
       router.replace('/')
     }
-  }, [searchState, router])
+  }, [hasHydrated, searchState, router])
+
+  if (!hasHydrated) return (
+    <div className="min-h-screen bg-gray-50/30 flex flex-col items-center justify-center space-y-4 font-sans">
+      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+      <p className="text-gray-500 font-medium animate-pulse">{t('loading') || 'Searching for buses...'}</p>
+    </div>
+  );
 
   const buses = searchState.buses?.length ? searchState.buses : searchState.taxi || []
   
@@ -141,7 +154,7 @@ export default function BusPage() {
             </div>
 
             <div className="text-right flex flex-col items-end">
-              <div className="text-2xl font-black text-gray-900">₹{basePrice.toLocaleString()}</div>
+              <div className="text-2xl font-black text-gray-900">{tPrice(basePrice)}</div>
               
               <button className={`text-sm font-bold flex items-center mt-2 group ${isSelected ? 'text-orange-600' : 'text-blue-600'}`}>
                 {isSelected ? (isExpanded ? 'Change Platform' : 'Selected') : 'Select Bus'} 
@@ -167,7 +180,7 @@ export default function BusPage() {
                          className={`p-4 rounded-xl flex items-center justify-between border transition-all cursor-pointer ${isPlatformSelected ? 'bg-orange-50 border-orange-500 text-orange-900 ring-1 ring-orange-500 shadow-sm' : 'bg-white border-gray-200 text-gray-900 hover:border-orange-300'}`}
                          >
                          <span className="font-bold">{platform}</span>
-                         <span className="font-black">₹{basePrice.toLocaleString()}</span>
+                         <span className="font-black">{tPrice(basePrice)}</span>
                          </button>
                      )
                  })}
@@ -271,7 +284,7 @@ export default function BusPage() {
                <div>
                   <span className="text-gray-500 font-semibold text-sm">Selected Route:</span>
                   <div className="font-black text-gray-900 text-lg flex items-center gap-2">
-                     {searchState.selectedBus.operator || 'National Travels'} • {searchState.selectedBusPlatform}
+                     {searchState.selectedBus.operator || 'National Travels'} • {searchState.selectedBusPlatform} • {tPrice(searchState.selectedBus.price || 0)}
                   </div>
                </div>
              ) : (

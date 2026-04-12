@@ -1,5 +1,6 @@
 import cloudinary
 import cloudinary.utils
+import cloudinary.uploader
 import time
 
 cloudinary.config(
@@ -15,18 +16,27 @@ def get_upload_url(trip_id: str, filename: str, location: str = ""):
         params = {"timestamp": timestamp, "public_id": public_id}
         signature = cloudinary.utils.api_sign_request(params, cloudinary.config().api_secret)
         return {
-            "upload_url": f"https://api.cloudinary.com/v1_1/dreb8pzbb/image/upload",
+            "upload_url": f"https://api.cloudinary.com/v1_1/{cloudinary.config().cloud_name}/image/upload",
             "signature": signature,
             "timestamp": timestamp,
             "public_id": public_id,
-            "cloud_name": "dreb8pzbb",
-            "api_key": "324125924744397"
+            "cloud_name": cloudinary.config().cloud_name,
+            "api_key": cloudinary.config().api_key
         }
     except Exception as e:
         print(f"Cloudinary error: {e}")
-        return {
-            "upload_url": "https://api.cloudinary.com/v1_1/dreb8pzbb/image/upload",
-            "signature": "mock",
-            "timestamp": int(time.time()),
-            "public_id": f"tripdone/{trip_id}"
-        }
+        return None
+
+def upload_image(file_content, public_id):
+    """Uploads a file directly to Cloudinary from the server."""
+    try:
+        result = cloudinary.uploader.upload(
+            file_content,
+            public_id=public_id,
+            overwrite=True,
+            resource_type="image"
+        )
+        return result.get("secure_url")
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None

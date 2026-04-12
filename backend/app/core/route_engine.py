@@ -24,7 +24,7 @@ def parse_duration(duration_str: str) -> int:
     except:
         return 300
 
-def build_routes(trains: list, taxi: list, date: str) -> list:
+def build_routes(trains: list, taxi: list, flights: list, date: str) -> list:
     """
     Dynamically builds route combinations and labels cheapest/fastest.
     Each route = one or more legs (train + cab, flight + cab, etc.)
@@ -32,7 +32,7 @@ def build_routes(trains: list, taxi: list, date: str) -> list:
     combinations = []
 
     # Combination 1: Direct flights
-    for f in MOCK_FLIGHTS:
+    for f in flights:
         cab = taxi[0] if taxi else {"provider":"Ola Mini","price_min":280}
         total_cost = f["price"] + cab["price_min"]
         total_min = f["duration_min"] + 45  # 45 min for cab to airport
@@ -55,9 +55,7 @@ def build_routes(trains: list, taxi: list, date: str) -> list:
         total_min = dur_min + 30
         combinations.append({
             "legs": [
-                {"mode":"train","name":t["name"],"number":t["number"],
-                 "dep":t.get("dep","06:00"),"arr":t.get("arr","12:00"),
-                 "price":train_price,"class":cheapest_class.get("class","SL")},
+                {**t, "mode":"train", "price":train_price, "class":cheapest_class.get("class","SL")},
                 {"mode":"cab","name":cab["provider"],"price":cab["price_min"]}
             ],
             "total_cost": total_cost,
@@ -96,16 +94,13 @@ def build_routes(trains: list, taxi: list, date: str) -> list:
         seen.add(key)
         leg_descriptions = []
         for leg in combo["legs"]:
-            leg_descriptions.append({
-                "mode": leg["mode"],
-                "name": leg.get("name",""),
-                "from": leg.get("from",""),
-                "to": leg.get("to",""),
-                "dep": leg.get("dep",""),
-                "arr": leg.get("arr",""),
-                "price": leg.get("price", leg.get("price_min",0)),
-                "class": leg.get("class","")
-            })
+            # Preserve all original fields from the leg, but emphasize common ones
+            desc = {**leg}
+            # Ensure price is consistently named
+            if "price" not in desc and "price_min" in desc:
+                desc["price"] = desc["price_min"]
+            leg_descriptions.append(desc)
+            
         routes.append({
             "id": idx,
             "label": label,
