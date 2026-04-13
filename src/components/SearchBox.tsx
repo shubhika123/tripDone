@@ -60,29 +60,33 @@ export default function SearchBox() {
     setLoading(true);
     setLoadingMsg(t('loading'));
     try {
-      // Use env var, or call backend directly (CORS is configured for Vercel origin)
+      // Primary: use Next.js API route (server-side proxy, no CORS issues)
+      // Fallback: direct backend call (requires CORS)
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tripdone-crl1.onrender.com';
       let res: Response | null = null;
       let isError = false;
 
-      // Retry up to 3 times with 3s delay between attempts (Render free tier cold start)
+      const searchBody = JSON.stringify({
+        from_city: searchState.from,
+        to_city: searchState.to,
+        date: searchState.departureDate,
+        modes: ['flight', 'train', 'bus', 'cab'],
+        adults: searchState.adults || 1
+      });
+
+      // Retry up to 3 times with delay between attempts (Render free tier cold start)
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           if (attempt === 1) setLoadingMsg(t('wakingServer'));
           else setLoadingMsg(`${t('retryLive')} ${attempt}/3...`);
           
-          const apiUrl = `${BACKEND}/api/search`;
+          // Try server-side proxy first (no CORS), then direct
+          const apiUrl = attempt <= 2 ? '/api/search' : `${BACKEND}/api/search`;
           res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              from_city: searchState.from,
-              to_city: searchState.to,
-              date: searchState.departureDate,
-              modes: ['flight', 'train', 'bus', 'cab'],
-              adults: searchState.adults || 1
-            }),
-            signal: AbortSignal.timeout(20000), // 20s per attempt
+            body: searchBody,
+            signal: AbortSignal.timeout(25000), // 25s per attempt
           });
           if (res.ok) break; 
         } catch (err) {

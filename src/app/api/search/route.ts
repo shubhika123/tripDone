@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const BACKEND_URL = 'https://tripdone-crl1.onrender.com'
 
+export const maxDuration = 30 // Allow up to 30s for Render cold starts (Vercel)
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -10,6 +12,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(25000), // 25s timeout for cold starts
     })
 
     if (!res.ok) {

@@ -15,14 +15,14 @@ from app.routers.gallery import router as gallery_router
 app = FastAPI(title="TripDone API", version="1.0.0")
 
 # In production, specify your Vercel domains for better security
-# Wildcard "*" is NOT allowed when allow_credentials=True
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://tripdone.vercel.app",
     "https://tripdone-live.vercel.app",
-    "https://tripdone-xi.vercel.app", # Potential staging/alternative
+    "https://tripdone-xi.vercel.app",
+    "https://tripdone-five.vercel.app",
+    "https://tripdone-git-main-shubhika-jains-projects.vercel.app",
 ]
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,6 +30,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Also allow any vercel.app preview/branch deploy
+    allow_origin_regex=r"https://tripdone.*\.vercel\.app",
 )
 
 # Include all routers
