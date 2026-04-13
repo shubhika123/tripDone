@@ -69,7 +69,7 @@ export default function SearchBox() {
       const searchBody = JSON.stringify({
         from_city: searchState.from,
         to_city: searchState.to,
-        date: searchState.departureDate,
+        date: searchState.departureDate || new Date().toISOString().split('T')[0],
         modes: ['flight', 'train', 'bus', 'cab'],
         adults: searchState.adults || 1
       });
