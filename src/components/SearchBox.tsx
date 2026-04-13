@@ -119,10 +119,25 @@ export default function SearchBox() {
                 arrivalTime: leg.arr || leg.arrivalTime,
             }))
         }));
+        // Normalize train field names from backend → frontend
+        const mappedTrains = (data.trains || []).map((t: any) => {
+          const classes = t.classes || [];
+          const cheapestPrice = classes.length > 0
+            ? Math.min(...classes.map((c: any) => c.price || Infinity))
+            : null;
+          return {
+            ...t,
+            trainNumber: t.trainNumber || t.number || '',
+            departureTime: t.departureTime || t.dep || '',
+            arrivalTime: t.arrivalTime || t.arr || '',
+            price: t.price || cheapestPrice || 500,
+          };
+        });
+
         searchState.setSearch({
             routes: mappedRoutes,
             flights: data.flights || [],
-            trains: data.trains || [],
+            trains: mappedTrains,
             taxi: data.taxi || [],
             buses: data.buses || [],
             isFallback: false

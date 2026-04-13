@@ -36,6 +36,7 @@ export default function TrainPage() {
   );
 
   const trains = searchState.trains || []
+  const isOfflineData = trains.length > 0 && trains[0]?.is_offline === true
   
   // Previous Arrival Time logic 
   let previousArrivalTime: string | null = null;
@@ -71,9 +72,14 @@ export default function TrainPage() {
       return curDep >= prevArr;
   })
 
-  // Mock confidence score locally
-  const getConfidenceScore = () => {
-     return Math.floor(Math.random() * 30 + 70) + '%'; // 70-99%
+  // Use real confidence from backend, fallback to random
+  const getConfidenceScore = (train: any) => {
+     if (train.confidence_score) return train.confidence_score + '%';
+     return Math.floor(Math.random() * 30 + 70) + '%';
+  }
+  const getConfidenceColor = (train: any) => {
+     if (train.confidence_color) return train.confidence_color;
+     return 'blue';
   }
 
   const sortedTrains = [...filteredTrains].sort((a, b) => {
@@ -163,7 +169,7 @@ export default function TrainPage() {
                 <div className="mt-1 relative group inline-flex items-center" onClick={(e) => { e.stopPropagation(); setShowProModal(true); }}>
                    <Lock className="w-3 h-3 text-indigo-400 mr-1" />
                    <div className="text-xs font-bold text-indigo-600 blur-[3px] group-hover:blur-0 transition-all select-none border border-indigo-200 bg-indigo-50 px-2 py-0.5 rounded cursor-pointer">
-                     {getConfidenceScore()} chance of confirmation
+                     {getConfidenceScore(train)} chance of confirmation
                    </div>
                 </div>
               )}
@@ -265,7 +271,15 @@ export default function TrainPage() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-black text-gray-900">Available Trains</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-black text-gray-900">Available Trains</h2>
+            {isOfflineData && (
+              <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">⚡ Offline Data</span>
+            )}
+            {!isOfflineData && trains.length > 0 && (
+              <span className="text-xs font-bold bg-green-100 text-green-700 px-2.5 py-1 rounded-full border border-green-200">✓ Live IRCTC</span>
+            )}
+          </div>
           <div className="flex items-center space-x-2 bg-white px-4 py-2 border border-gray-200 rounded-full shadow-sm hover:border-indigo-300 transition-colors">
               <input 
                 type="checkbox" 

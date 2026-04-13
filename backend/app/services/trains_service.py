@@ -100,10 +100,13 @@ async def get_trains(from_city: str, to_city: str, date: str):
             return get_mock_trains()
 
         trains = []
-        # Process top 3 trains to fetch real-time delays without hitting quota too fast
+        # Process top 5 trains to fetch real-time delays without hitting quota too fast
         for t in data["data"][:5]:
             number = t.get("train_number", "")
             name = t.get("train_name", "Unknown")
+            dep_time = t.get("from_std", "00:00")
+            arr_time = t.get("to_std", "00:00")
+            duration = t.get("duration", "N/A")
             
             # Fetch real-time delay data
             live_data = await get_real_time_status(number, date)
@@ -114,23 +117,32 @@ async def get_trains(from_city: str, to_city: str, date: str):
             
             # Fetch real fares
             real_classes = await get_train_fare(number, from_code, to_code, date)
+            classes = real_classes if real_classes else [
+                {"class": "SL", "price": 350, "available": True},
+                {"class": "3A", "price": 900, "available": True}
+            ]
+            # Extract top-level price from cheapest class
+            top_price = min((c["price"] for c in classes if "price" in c), default=500)
             
             trains.append({
+                # Original short names (used by route_engine)
                 "number": number,
+                "dep": dep_time,
+                "arr": arr_time,
+                # Frontend-expected names
+                "trainNumber": number,
                 "name": name,
-                "dep": t.get("from_std", "00:00"),
-                "arr": t.get("to_std", "00:00"),
-                "duration": t.get("duration", "N/A"),
+                "departureTime": dep_time,
+                "arrivalTime": arr_time,
+                "duration": duration,
+                "price": top_price,
                 "confidence_score": conf["confidence_score"],
                 "confidence_label": conf["confidence_label"],
                 "confidence_color": conf["confidence_color"],
                 "on_time_note": conf["on_time_note"],
                 "is_best": conf["confidence_score"] >= 85,
                 "is_real_time": delay is not None,
-                "classes": real_classes if real_classes else [
-                    {"class": "SL", "price": 350, "available": True},
-                    {"class": "3A", "price": 900, "available": True}
-                ]
+                "classes": classes
             })
 
         trains.sort(key=lambda x: x["confidence_score"], reverse=True)
@@ -143,15 +155,20 @@ async def get_trains(from_city: str, to_city: str, date: str):
 def get_mock_trains():
     from app.ml.confidence_score import get_confidence
     trains = [
-        {"number": "22436", "name": "Vande Bharat Express", "dep": "06:00", "arr": "21:50", "duration": "15h 50m"},
-        {"number": "12431", "name": "Rajdhani Express", "dep": "11:55", "arr": "06:10+1", "duration": "18h 15m"},
-        {"number": "12533", "name": "Pushpak Express", "dep": "20:10", "arr": "17:35+1", "duration": "21h 25m"},
+        {"number": "22436", "name": "Vande Bharat Express", "dep": "06:00", "arr": "21:50", "duration": "15h 50m", "price": 420},
+        {"number": "12431", "name": "Rajdhani Express", "dep": "11:55", "arr": "06:10+1", "duration": "18h 15m", "price": 420},
+        {"number": "12533", "name": "Pushpak Express", "dep": "20:10", "arr": "17:35+1", "duration": "21h 25m", "price": 420},
     ]
     result = []
     for t in trains:
         conf = get_confidence(t["number"], t["name"])
         result.append({
-            **t, **conf, "is_best": conf["confidence_score"] >= 85,
+            **t, **conf,
+            # Frontend-expected field names (aliases)
+            "trainNumber": t["number"],
+            "departureTime": t["dep"],
+            "arrivalTime": t["arr"],
+            "is_best": conf["confidence_score"] >= 85,
             "classes": [
                 {"class": "SL", "price": 420, "available": True},
                 {"class": "3A", "price": 1150, "available": True}
