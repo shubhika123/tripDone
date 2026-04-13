@@ -142,7 +142,7 @@ export default function RoutesPage() {
       <main className="max-w-5xl mx-auto px-4 py-10 pb-32 w-full">
         <div className="w-full flex flex-col items-center">
           
-          {(searchState.isFallback || routes.some((r: any) => r.legs?.some((l: any) => l.is_offline))) && (
+          {searchState.isFallback && (
             <div className="w-full max-w-4xl mb-8 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-4 shrink-0">
                 <Info className="w-5 h-5 text-orange-600" />
