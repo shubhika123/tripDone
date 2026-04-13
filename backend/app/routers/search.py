@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
 import asyncio
-from app.services.trains_service import get_trains, get_mock_trains
+from app.services.trains_service import get_trains
 from app.services.taxi_service import get_taxi
 from app.services.serpapi_service import get_real_flights
 from app.core.route_engine import build_routes, MOCK_FLIGHTS, MOCK_BUSES
@@ -29,7 +29,7 @@ async def search(req: SearchRequest):
         )
         
         # Unpack results with safety
-        trains = trains_res if not isinstance(trains_res, Exception) else get_mock_trains()
+        trains = trains_res if not isinstance(trains_res, Exception) else []
         taxi = taxi_res if not isinstance(taxi_res, Exception) else []
         
         if isinstance(flights_res, Exception) or not flights_res:
@@ -44,7 +44,7 @@ async def search(req: SearchRequest):
         
     except Exception as e:
         print(f"Search gather failed: {e}")
-        trains = get_mock_trains()
+        trains = []
         taxi = []
         flights = [
             {**f, "from": req.from_city.upper(), "to": req.to_city.upper()} 

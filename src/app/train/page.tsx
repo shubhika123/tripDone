@@ -273,11 +273,14 @@ export default function TrainPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-black text-gray-900">Available Trains</h2>
-            {isOfflineData && (
-              <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">⚡ Offline Data</span>
-            )}
-            {!isOfflineData && trains.length > 0 && (
+            {trains.length > 0 && trains[0]?.source === 'irctc_api' && (
               <span className="text-xs font-bold bg-green-100 text-green-700 px-2.5 py-1 rounded-full border border-green-200">✓ Live IRCTC</span>
+            )}
+            {trains.length > 0 && trains[0]?.source === 'schedule_database' && (
+              <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full border border-blue-200">🚆 Railway Schedule</span>
+            )}
+            {trains.length > 0 && trains[0]?.source === 'estimated' && (
+              <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">⚡ Estimated</span>
             )}
           </div>
           <div className="flex items-center space-x-2 bg-white px-4 py-2 border border-gray-200 rounded-full shadow-sm hover:border-indigo-300 transition-colors">
