@@ -60,8 +60,8 @@ export default function SearchBox() {
     setLoading(true);
     setLoadingMsg(t('loading'));
     try {
-      // Use relative path by default for Vercel rewrites, fallback to env or hardcoded
-      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+      // Use env var, or call backend directly (CORS is configured for Vercel origin)
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tripdone-crl1.onrender.com';
       let res: Response | null = null;
       let isError = false;
 
@@ -71,7 +71,7 @@ export default function SearchBox() {
           if (attempt === 1) setLoadingMsg(t('wakingServer'));
           else setLoadingMsg(`${t('retryLive')} ${attempt}/3...`);
           
-          const apiUrl = BACKEND ? `${BACKEND}/api/search` : `/api/search`;
+          const apiUrl = `${BACKEND}/api/search`;
           res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
